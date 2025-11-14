@@ -7,7 +7,7 @@ from typing import Optional, Dict, Any
 from core.request_handler import RequestHandler
 from config.api_config import DOWNLOAD_ENDPOINT
 from config.params_config import get_download_params
-from config.settings import EXPORT_POLL_INTERVAL, EXPORT_MAX_WAIT_TIME
+from config.settings import EXPORT_POLL_INTERVAL, EXPORT_MAX_WAIT_TIME, EXPORT_INITIAL_WAIT
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -179,9 +179,9 @@ class ExportHandler:
         if not self.submit_export_task(export_url, export_params):
             return None
         
-        # 2. 等待足够时间让导出任务处理和记录生成（60-90秒）
-        logger.info("等待导出任务处理和记录生成，预计需要60-90秒...")
-        time.sleep(60)  # 等待60秒让任务充分处理并生成记录
+        # 2. 等待初始时间让导出任务处理和记录生成
+        logger.info(f"等待导出任务处理和记录生成，预计需要{EXPORT_INITIAL_WAIT}秒...")
+        time.sleep(EXPORT_INITIAL_WAIT)  # 等待配置的初始时间让任务充分处理并生成记录
         
         # 3. 开始轮询获取结果
         download_url = self.wait_for_export_completion_with_time(module_name, start_time)

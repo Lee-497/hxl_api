@@ -25,8 +25,9 @@ MAX_RETRIES = 3       # 最大重试次数
 RETRY_DELAY = 2       # 重试延迟（秒）
 
 # 导出任务轮询配置
-EXPORT_POLL_INTERVAL = 20   # 轮询间隔（秒）- 增加间隔避免频繁请求
+EXPORT_POLL_INTERVAL = 15   # 轮询间隔（秒）- 优化为15秒，更快响应
 EXPORT_MAX_WAIT_TIME = 300  # 最大等待时间（秒）- 给足够时间让任务完成
+EXPORT_INITIAL_WAIT = 20    # 初始等待时间（秒）- 等待任务启动和记录生成
 
 # 日志配置
 LOG_DATE_FORMAT = "%Y-%m-%d %H:%M:%S"

@@ -4,6 +4,9 @@
 
 from datetime import datetime
 from config.headers_config import COMPANY_ID, OPERATOR_STORE_ID, OPERATOR
+from utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 def get_current_date():
@@ -98,3 +101,39 @@ STORE_MANAGEMENT_QUERY_PARAMS = {
     ],
     "store_label_ids": []
 }
+
+# ==================== 商品销售分析模块 - 参数模板 ====================
+
+# 销售分析参数模板 - 根据不同业务需求配置
+SALES_ANALYSIS_TEMPLATES = {
+    # 冷藏乳饮销售报表 - 基于实际业务需求的参数配置
+    "dairy_cold_drinks": {
+        "bizday": ["2025-11-13", "2025-11-13"],                    # 业务日期范围
+        "company_id": 66666,                                       # 公司ID
+        "date_range": "DAY",                                       # 日期范围类型：DAY/WEEK/MONTH
+        "item_category_ids": [6666600000591, 6666600001229, 6666600001113, 6666600000859, 6666600001114, 6666600001116],  # 商品分类ID（冷藏乳饮相关分类）
+        "operator_store_id": 6666600004441,                        # 操作员门店ID
+        "query_count": True,                                       # 是否查询数量
+        "query_no_tax": False,                                     # 是否查询不含税金额
+        "query_year_compare": False,                               # 是否查询同比
+        "sale_mode": "DIRECT",                                     # 销售模式：DIRECT直营
+        "store_ids": [6868800000595],                             # 目标门店ID列表
+        "summary_types": ["STORE", "CATEGORY_LV1", "CATEGORY_LV2", "CATEGORY_LV3", "ITEM"]  # 汇总维度
+    }
+}
+
+def get_sales_analysis_params(template_name="dairy_cold_drinks"):
+    """
+    获取销售分析参数模板
+    
+    Args:
+        template_name: 模板名称，可选值: dairy_cold_drinks
+        
+    Returns:
+        参数字典
+    """
+    if template_name not in SALES_ANALYSIS_TEMPLATES:
+        logger.warning(f"未找到模板 {template_name}，使用默认模板 dairy_cold_drinks")
+        template_name = "dairy_cold_drinks"
+    
+    return SALES_ANALYSIS_TEMPLATES[template_name].copy()

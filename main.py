@@ -8,10 +8,11 @@ from core.report_manager import get_report_manager
 # ==================== 模块开关配置 ====================
 # 设置为 True 启用对应模块，False 禁用
 MODULE_SWITCHES = {
-    "store_product_attr": False,      # 门店商品属性
-    "inventory_query": False,         # 库存查询
-    "org_product_info": False,       # 组织商品档案
-    "store_management": True,        # 门店管理
+    "store_product_attr": False,         # 门店商品属性
+    "inventory_query": False,            # 库存查询
+    "org_product_info": False,          # 组织商品档案
+    "store_management": False,          # 门店管理
+    "sales_analysis": "dairy_cold_drinks", # 商品销售分析（冷藏乳饮销售报表）
 }
 
 # ==================== 加工报表配置 ====================
@@ -21,6 +22,7 @@ ENABLE_PROCESSING = True
 # 可以单独控制每个报表的启用状态
 PROCESSING_SWITCHES = {
     "inventory_summary_report": False,    # 库存汇总报表
+    "sales_analysis_report": True,       # 销售分析报表
     # 可以在这里添加更多报表的开关
 }
 

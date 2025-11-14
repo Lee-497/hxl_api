@@ -5,6 +5,7 @@
 # 基础域名
 ERP_BASE_URL = "https://erp-web.erp.ali-prod.xlbsoft.com"
 EXPORT_BASE_URL = "https://gdp.xlbsoft.com"
+BI_BASE_URL = "https://bi-web.bi.ali-prod.xlbsoft.com"
 
 # 导出接口地址（各模块的导出接口）
 EXPORT_ENDPOINTS = {
@@ -19,6 +20,9 @@ EXPORT_ENDPOINTS = {
     
     # 门店管理导出接口
     "store_management": f"{EXPORT_BASE_URL}/erp-mdm/hxl.erp.store.new.page",
+    
+    # 商品销售分析导出接口
+    "sales_analysis": f"{BI_BASE_URL}/bi/hxl.bi.pos.itemanalyse.export",
 }
 
 # 通用下载接口（用于获取导出任务历史和下载文件）
