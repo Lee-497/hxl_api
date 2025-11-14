@@ -4,7 +4,7 @@
 
 # 通用请求头配置
 HEADERS = {
-    "access-token": "965d32cf448546919d066f7221e0c257",
+    "access-token": "43a0491fbd5744c8a60766c58a7d0034",
     "content-type": "application/json;charset=UTF-8",
     "company-id": "66666",
     "user-id": "6868800001138",

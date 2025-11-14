@@ -16,6 +16,9 @@ EXPORT_ENDPOINTS = {
     
     # 库存查询导出接口
     "inventory_query": f"{ERP_BASE_URL}/erp/hxl.erp.stock.export",
+    
+    # 门店管理导出接口
+    "store_management": f"{EXPORT_BASE_URL}/erp-mdm/hxl.erp.store.new.page",
 }
 
 # 通用下载接口（用于获取导出任务历史和下载文件）

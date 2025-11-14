@@ -11,6 +11,7 @@ MODULE_SWITCHES = {
     "store_product_attr": False,      # 门店商品属性
     "inventory_query": False,         # 库存查询
     "org_product_info": False,       # 组织商品档案
+    "store_management": True,        # 门店管理
 }
 
 # ==================== 加工报表配置 ====================
@@ -19,7 +20,7 @@ ENABLE_PROCESSING = True
 
 # 可以单独控制每个报表的启用状态
 PROCESSING_SWITCHES = {
-    "inventory_summary_report": True,    # 库存汇总报表
+    "inventory_summary_report": False,    # 库存汇总报表
     # 可以在这里添加更多报表的开关
 }
 

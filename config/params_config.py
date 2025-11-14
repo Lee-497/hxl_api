@@ -79,3 +79,22 @@ INVENTORY_QUERY_EXPORT_PARAMS = {
     "storehouse_ids": [],
     "supplier_main_body_ids": None
 }
+
+# 门店管理模块 - 查询参数
+STORE_MANAGEMENT_QUERY_PARAMS = {
+    "page_size": 200,
+    "page_number": 0,
+    "wait_assign": False,
+    "leftSelect": {},
+    "business_area_ids": [],
+    "city_codes": [],
+    "not_contain_external_store_flag": True,
+    "store_group_ids": [
+        6666600000143, 6666600000172, 6868800000002, 6868800000003, 6868800000006, 
+        6868800000007, 6868800000008, 6868800000009, 6868800000010, 6868800000011,
+        6868800000012, 6868800000013, 6868800000014, 6868800000015, 6868800000016,
+        6868800000017, 6868800000018, 6868800000019, 6868800000020, 6868800000021,
+        6868800000022, 6868800000023, 6868800000024, 6868800000039
+    ],
+    "store_label_ids": []
+}

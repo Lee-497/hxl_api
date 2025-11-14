@@ -5,6 +5,7 @@
 from modules.store_product_attr import StoreProductAttrModule
 from modules.org_product_info import OrgProductInfoModule
 from modules.inventory_query import InventoryQueryModule
+from modules.store_management import StoreManagementModule
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -44,6 +45,16 @@ class AppRunner:
             return bool(result)
         except Exception as e:
             logger.error(f"组织商品档案模块异常: {str(e)}")
+            return False
+    
+    def run_store_management(self):
+        """执行门店管理模块"""
+        try:
+            module = StoreManagementModule()
+            result = module.export_and_download()
+            return bool(result)
+        except Exception as e:
+            logger.error(f"门店管理模块异常: {str(e)}")
             return False
     
     def execute_modules(self, module_switches):
@@ -94,6 +105,18 @@ class AppRunner:
             else:
                 failed_modules.append("组织商品档案")
                 print("[失败] 组织商品档案模块失败")
+            print()
+        
+        # 门店管理模块
+        if module_switches.get("store_management", False):
+            total_modules += 1
+            print(">> 执行门店管理模块...")
+            if self.run_store_management():
+                success_modules += 1
+                print("[成功] 门店管理模块完成")
+            else:
+                failed_modules.append("门店管理")
+                print("[失败] 门店管理模块失败")
             print()
         
         return {
