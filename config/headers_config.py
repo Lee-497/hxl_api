@@ -1,0 +1,20 @@
+"""
+请求头与Token配置
+"""
+
+# 通用请求头配置
+HEADERS = {
+    "access-token": "965d32cf448546919d066f7221e0c257",
+    "content-type": "application/json;charset=UTF-8",
+    "company-id": "66666",
+    "user-id": "6868800001138",
+    "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
+    "cookie": "__snaker__id=h8gmlZxl9EFs971n; gdxidpyhxdE=Z2Z2OAejA3ICfX1rKS2L4EZV%2FgXWbh%2Br4MwrzH7%2B2Jxwv9Tploq%2F%5Ce8AhLocm%2BturWgLlPGhM%2BLdkaxtpjbfQSDqC8CVj%5CpEMml73ZeENOgUbTtil4hUnIb%2Fdb4iALn%5CId%5CRlX%2FbqkX9Bkzo0mH%5CoNNkxm8jaejNkbRUjZUP4fJ8g%2FAG%3A1760424570513; xlb_client_secret=31869922-f120-2d61-e2fb-b5f5f668928f; xlb_domain=.xlbsoft.com; User-Id=6868800001138; Org-Ids=6666600000008; company_id=66666; account=18896006502wc; xlb_login_version=new; production_qiankun_token={%22account%22:%2218896006502wc%22%2C%22companyId%22:66666%2C%22accessToken%22:%229e976a702a1547cab3221446af8712f9%22}; xlb_token=Bearer%20eyJraWQiOiI4YTBhNGFmYi04MmRmLTQyZjEtYWI5My1iYmU3YTcyZGEzOWIiLCJhbGciOiJSUzI1NiJ9.eyJzdG9yZV9pZCI6IjY2NjY2MDAwMDQ0NDEiLCJzdWIiOiI2ODY4ODAwMDAxMTM4IiwiYWNjb3VudF90eXBlIjoiVVNFUiIsImlubmVyX3VzZXIiOnRydWUsImNvbXBhbnlfaWQiOjY2NjY2LCJsb2dpbl90eXBlIjoiUEhPTkUiLCJpc3MiOiJodHRwczovL2lkYWFzLmlkYWFzLmFsaS1wcm9kLnhsYnNvZnQuY29tL2lkYWFzIiwibG9naW5fc291cmNlIjoiV0VCIiwiZW5hYmxlZCI6dHJ1ZSwicmVsYXRpb25faWQiOiIiLCJhdWQiOiJlcnAiLCJuYmYiOjE3NjI0ODIzNzksIm5hbWUiOiLmnY7lhpt3YyIsImlkIjoiNjg2ODgwMDAwMTEzOCIsImV4cCI6MTc2MjQ4NTk3OSwiaWF0IjoxNzYyNDgyMzc5LCJjb21wYW55X3dlY2hhdF91bmlvbl9pZCI6IiIsInVzZXIiOnsid2VjaGF0X3dvcmtfdW5pb25faWQiOiIiLCJjb3VudHJ5X2NvZGUiOiIiLCJpbm5lcl91c2VyIjp0cnVlLCJsYXJrX3VuaW9uX2lkIjoiIiwiYXZhdGFyX3VybCI6IiIsImdlbmRlciI6IlVOS05PV04iLCJwaG9uZSI6eyJwaG9uZV9jb3VudHJ5X2NvZGUiOiIrODYiLCJwaG9uZV9udW1iZXIiOiIxODg5NjAwNjUwMiJ9LCJuYW1lIjp7Im1pZGRsZV9uYW1lIjoiIiwiZ2l2ZW5fbmFtZSI6IiIsImZhbWlseV9uYW1lIjoiIn0sIndlY2hhdF91bmlvbl9pZCI6IiIsImlkIjoiNjg2ODgwMDAwMTEzOCIsImlkZW50aXR5X2NhcmQiOnsiaWRlbnRpdHlfY2FyZF90eXBlIjoiIiwiaWRlbnRpdHlfY2FyZF9udW1iZXIiOiIifX0sImp0aSI6IjY2NzIxYWMxYTE4ODQ3YTM4NTRjZDExYmJlZTIzYjZmIiwiYWNjb3VudCI6IjE4ODk2MDA2NTAyd2MifQ.6cSOzQAuLXLULsRT4b_Nfr2IGmy_vnHflHjuWXrUL_UugEMQRnt-zLblg8RavKWer1eoi3IamageTFq9vXDgzW_Iv7kmE9lTqNHcQZ7xzbzQ8NyRX_hts2jrvHCMSKR-m5GeIjR19vpOj-jAtiybC9vSdDtiCEDrbxlFo2WLaU9zX2zU_Akf0a88buHRfhplj-ulFSGIiVdAycJ4SlFWQtgZTq0K6H_CmfAYT4Oi8xkfVOO8jig--41sZIGw-pRKnl6Ry90dwiO-3XSG_4rqzphLkDdb15pmBZ_BrXZyzMZdO9HcBi-CKlKM0ow1GaFqOH0d0ZUlFJ4CrR96uvurIw; xlb_refresh_token=f1aa3ee3315a4dd888116ae191ba1897; acw_tc=0a1e0fec17624838375482079e5fc1cbf0053612e32800647c6ffc025ae771"
+
+}
+
+# 公司ID和用户ID（供其他模块使用）
+COMPANY_ID = "66666"
+USER_ID = "6868800001138"
+OPERATOR_STORE_ID = 6666600004441
+OPERATOR = "李军wc"
