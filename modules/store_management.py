@@ -1,30 +1,79 @@
 """
 门店管理模块
 用于查询和采集门店信息，保存为Excel文件
+此模块使用直接API调用方式，不同于其他模块的导出任务方式
 """
 
-import requests
 import json
 import pandas as pd
-from datetime import datetime
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
+from core.base_module import ApiBasedModule
 from utils.logger import get_logger
 from utils.file_utils import generate_timestamped_filename
 from config.api_config import EXPORT_ENDPOINTS
 from config.params_config import STORE_MANAGEMENT_QUERY_PARAMS
-from config.headers_config import HEADERS
 from config.settings import DOWNLOADS_DIR
 
 logger = get_logger(__name__)
 
 
-class StoreManagementModule:
-    """门店管理类"""
+class StoreManagementModule(ApiBasedModule):
+    """门店管理数据采集模块（使用直接API调用方式）"""
     
     def __init__(self):
+        super().__init__()
         self.base_url = EXPORT_ENDPOINTS["store_management"]
         self.default_params = STORE_MANAGEMENT_QUERY_PARAMS.copy()
+        self.module_display_name = "门店管理"
+    
+    def fetch_data(self, **kwargs) -> Optional[List[Dict[str, Any]]]:
+        """
+        获取门店数据（实现ApiBasedModule抽象方法）
+        
+        Returns:
+            门店数据列表
+        """
+        result = self.get_all_stores()
+        if "error" in result:
+            return None
+        return result.get("data", [])
+    
+    def save_data(self, data: List[Dict[str, Any]]) -> Optional[Path]:
+        """
+        保存门店数据到Excel（实现ApiBasedModule抽象方法）
+        
+        Args:
+            data: 门店数据列表
+            
+        Returns:
+            保存的文件路径
+        """
+        try:
+            # 提取关键字段
+            extracted_data = self.extract_store_data(data)
+            
+            # 转换为DataFrame
+            df = pd.DataFrame(extracted_data)
+            
+            # 生成文件名
+            filename = generate_timestamped_filename(self.module_display_name, "xlsx")
+            file_path = DOWNLOADS_DIR / filename
+            
+            # 确保目录存在
+            DOWNLOADS_DIR.mkdir(parents=True, exist_ok=True)
+            
+            # 保存到Excel
+            df.to_excel(file_path, index=False, engine='openpyxl')
+            
+            logger.info(f"门店数据已保存到: {file_path}")
+            logger.info(f"保存门店数量: {len(extracted_data)}")
+            
+            return file_path
+            
+        except Exception as e:
+            logger.error(f"保存门店数据失败: {str(e)}")
+            return None
         
     def query_stores(self, custom_params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
@@ -42,31 +91,18 @@ class StoreManagementModule:
             if custom_params:
                 params.update(custom_params)
             
-            # 构建请求URL
-            url = self.base_url
-            
-            # 获取请求头
-            headers = HEADERS.copy()
-            
             logger.info(f"开始查询门店信息")
-            logger.info(f"请求URL: {url}")
+            logger.info(f"请求URL: {self.base_url}")
             logger.info(f"请求参数: {json.dumps(params, indent=2, ensure_ascii=False)}")
             
-            # 发送POST请求
-            response = requests.post(
-                url=url,
-                json=params,
-                headers=headers,
-                timeout=30
-            )
+            # 使用 RequestHandler 发送POST请求
+            result = self.request_handler.post(self.base_url, params)
             
-            # 检查响应状态
-            response.raise_for_status()
+            if not result:
+                logger.error("门店查询请求失败")
+                return {"error": "请求失败"}
             
-            # 解析响应
-            result = response.json()
-            
-            logger.info(f"门店查询成功，状态码: {response.status_code}")
+            logger.info("门店查询成功")
             
             # 记录响应数据统计和结构
             if isinstance(result, dict):
@@ -87,15 +123,9 @@ class StoreManagementModule:
             
             return result
             
-        except requests.exceptions.RequestException as e:
-            logger.error(f"门店查询请求失败: {str(e)}")
-            return {"error": f"请求失败: {str(e)}"}
-        except json.JSONDecodeError as e:
-            logger.error(f"门店查询响应解析失败: {str(e)}")
-            return {"error": f"响应解析失败: {str(e)}"}
         except Exception as e:
-            logger.error(f"门店查询发生未知错误: {str(e)}")
-            return {"error": f"未知错误: {str(e)}"}
+            logger.error(f"门店查询发生错误: {str(e)}")
+            return {"error": f"查询失败: {str(e)}"}
     
     def query_stores_by_group(self, store_group_ids: list) -> Dict[str, Any]:
         """
@@ -279,90 +309,6 @@ class StoreManagementModule:
             
         return True
     
-    def save_to_excel(self, stores_data: list, filename: str = None) -> str:
-        """
-        保存门店数据到Excel文件
-        
-        Args:
-            stores_data: 门店数据列表
-            filename: 文件名（可选）
-            
-        Returns:
-            保存的文件路径
-        """
-        try:
-            # 提取数据
-            extracted_data = self.extract_store_data(stores_data)
-            
-            # 转换为DataFrame
-            df = pd.DataFrame(extracted_data)
-            
-            # 生成文件名
-            if not filename:
-                filename = generate_timestamped_filename("门店管理", "xlsx")
-            
-            # 确保文件名以.xlsx结尾
-            if not filename.endswith('.xlsx'):
-                filename += '.xlsx'
-            
-            # 保存路径
-            file_path = DOWNLOADS_DIR / filename
-            
-            # 确保目录存在
-            DOWNLOADS_DIR.mkdir(parents=True, exist_ok=True)
-            
-            # 保存到Excel
-            df.to_excel(file_path, index=False, engine='openpyxl')
-            
-            logger.info(f"门店数据已保存到: {file_path}")
-            logger.info(f"保存门店数量: {len(extracted_data)}")
-            
-            return str(file_path)
-            
-        except Exception as e:
-            logger.error(f"保存门店数据到Excel时发生错误: {str(e)}")
-            raise e
-    
-    def export_and_download(self) -> Optional[str]:
-        """
-        统一接口：采集门店数据并保存为Excel文件
-        
-        Returns:
-            保存的文件路径，失败返回None
-        """
-        try:
-            logger.info("开始采集门店管理数据...")
-            print(">> 开始采集门店数据...")
-            
-            # 获取所有门店数据
-            result = self.get_all_stores()
-            
-            if "error" in result:
-                logger.error(f"门店数据采集失败: {result['error']}")
-                print(f"   [失败] 门店数据采集失败: {result['error']}")
-                return None
-            
-            stores_data = result.get("data", [])
-            if not stores_data:
-                logger.warning("未获取到门店数据")
-                print("   [警告] 未获取到门店数据")
-                return None
-            
-            logger.info(f"成功采集到 {len(stores_data)} 个门店数据")
-            print(f"   [成功] 成功采集到 {len(stores_data)} 个门店数据")
-            
-            # 保存到Excel
-            file_path = self.save_to_excel(stores_data)
-            
-            print(f"   [保存] 门店数据已保存: {Path(file_path).name}")
-            logger.info("门店管理数据采集完成")
-            
-            return file_path
-            
-        except Exception as e:
-            logger.error(f"门店管理数据采集异常: {str(e)}")
-            print(f"   [失败] 门店数据采集异常: {str(e)}")
-            return None
 
 
 def main():
@@ -372,8 +318,8 @@ def main():
     print("=== 门店管理模块测试 ===")
     
     # 测试统一接口
-    print("\n1. 测试export_and_download接口...")
-    result = store_mgmt.export_and_download()
+    print("\n1. 测试execute接口...")
+    result = store_mgmt.execute()
     
     if result:
         print(f"✅ 门店数据采集成功，文件保存至: {result}")

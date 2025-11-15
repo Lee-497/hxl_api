@@ -5,25 +5,37 @@
 from core.app_runner import AppRunner
 from core.report_manager import get_report_manager
 
-# ==================== 模块开关配置 ====================
-# 设置为 True 启用对应模块，False 禁用
+# ==================== 数据采集模块 ====================
 MODULE_SWITCHES = {
-    "store_product_attr": False,         # 门店商品属性
-    "inventory_query": False,            # 库存查询
-    "org_product_info": False,          # 组织商品档案
-    "store_management": False,          # 门店管理
-    "sales_analysis": "dairy_cold_drinks", # 商品销售分析（冷藏乳饮销售报表）
+    "store_product_attr": False,    # 门店商品属性
+    "inventory_query": False,       # 库存查询
+    "org_product_info": False,      # 组织商品档案
+    "store_management": False,      # 门店管理
+    "sales_analysis": False,        # 商品销售分析
+    "delivery_analysis": False,     # 配送分析
 }
 
-# ==================== 加工报表配置 ====================
-# 设置为 True 启用加工报表生成，False 禁用
+# ==================== 模块参数 ====================
+MODULE_PARAMS = {
+    "sales_analysis": {
+        # 使用预定义模板
+        "template_name": "dairy_cold_drinks",
+    },
+    "delivery_analysis": {
+        "template_name": "order_delivery",
+    },
+}
+
+# ==================== 加工报表 ====================
 ENABLE_PROCESSING = True
 
-# 可以单独控制每个报表的启用状态
 PROCESSING_SWITCHES = {
-    "inventory_summary_report": False,    # 库存汇总报表
-    "sales_analysis_report": True,       # 销售分析报表
-    # 可以在这里添加更多报表的开关
+    # 库存汇总报表
+    "inventory_summary_report": False,
+    # 冷藏乳饮报表
+    "sales_analysis_report": False,  # ✅ 启用销售分析报表
+    # 订单配送分析报表
+    "inventory_store_category_report": True,
 }
 
 
@@ -33,16 +45,10 @@ def main():
     print(">>> 自动化数据报表脚本启动 <<<")
     print("=" * 60)
     
-    # 创建应用执行器
     app_runner = AppRunner()
-    
-    # 执行启用的模块
-    results = app_runner.execute_modules(MODULE_SWITCHES)
-    
-    # 打印执行总结
+    results = app_runner.execute_modules(MODULE_SWITCHES, MODULE_PARAMS)
     app_runner.print_summary(results)
     
-    # 生成加工报表（如果启用）
     if ENABLE_PROCESSING:
         print()
         print("=" * 60)
@@ -51,11 +57,8 @@ def main():
         
         report_manager = get_report_manager()
         report_manager.print_reports_info()
-        
-        # 运行启用的报表
         report_results = report_manager.run_enabled_reports(PROCESSING_SWITCHES)
         
-        # 报表总结
         print("=" * 60)
         print(">>> 报表生成总结 <<<")
         print("=" * 60)

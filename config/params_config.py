@@ -1,22 +1,72 @@
 """
-各模块参数配置
+参数配置文件
+集中管理所有模块的请求参数
 """
 
-from datetime import datetime
-from config.headers_config import COMPANY_ID, OPERATOR_STORE_ID, OPERATOR
+from datetime import datetime, timedelta
+from pathlib import Path
+from typing import List, Optional
+import pandas as pd
+from config.settings import DOWNLOADS_DIR
+from config.headers_config import OPERATOR_STORE_ID, COMPANY_ID, OPERATOR
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
 
-
 def get_current_date():
-    """获取当前日期，格式: YYYY-MM-DD"""
+    """获取当前日期（YYYY-MM-DD格式）"""
     return datetime.now().strftime("%Y-%m-%d")
+
+def get_yesterday_date():
+    """获取昨天日期（YYYY-MM-DD格式）"""
+    yesterday = datetime.now() - timedelta(days=1)
+    return yesterday.strftime("%Y-%m-%d")
+
+def get_current_datetime():
+    """获取当前日期时间（YYYY-MM-DD HH:MM:SS格式）"""
+    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 
 def get_current_datetime_iso():
     """获取当前时间，ISO格式: YYYY-MM-DDTHH:MM:SS.fffZ"""
     return datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
+
+def get_store_ids_from_file() -> List[int]:
+    """
+    从门店管理数据文件中读取门店ID列表
+    
+    Returns:
+        List[int]: 门店ID列表
+    """
+    try:
+        # 查找最新的门店管理数据文件
+        store_files = list(DOWNLOADS_DIR.glob("门店管理_*.xlsx"))
+        
+        if not store_files:
+            logger.warning("未找到门店管理数据文件，使用默认门店ID")
+            return [6868800000595]  # 默认门店ID
+        
+        # 获取最新文件
+        latest_file = max(store_files, key=lambda f: f.stat().st_mtime)
+        logger.info(f"读取门店管理数据: {latest_file.name}")
+        
+        # 读取Excel文件
+        df = pd.read_excel(latest_file)
+        
+        # 提取id字段
+        if 'id' not in df.columns:
+            logger.error("门店管理数据中未找到'id'字段")
+            return [6868800000595]
+        
+        # 获取所有门店ID并去重
+        store_ids = df['id'].dropna().astype(int).unique().tolist()
+        logger.info(f"成功读取 {len(store_ids)} 个门店ID")
+        
+        return store_ids
+        
+    except Exception as e:
+        logger.error(f"读取门店ID失败: {str(e)}")
+        return [6868800000595]  # 返回默认门店ID
 
 # 门店商品属性模块 - 导出参数
 STORE_PRODUCT_ATTR_EXPORT_PARAMS = {
@@ -104,36 +154,97 @@ STORE_MANAGEMENT_QUERY_PARAMS = {
 
 # ==================== 商品销售分析模块 - 参数模板 ====================
 
-# 销售分析参数模板 - 根据不同业务需求配置
-SALES_ANALYSIS_TEMPLATES = {
+# 销售分析参数模板（静态部分） - 根据不同业务需求配置
+_SALES_ANALYSIS_TEMPLATES = {
     # 冷藏乳饮销售报表 - 基于实际业务需求的参数配置
     "dairy_cold_drinks": {
-        "bizday": ["2025-11-13", "2025-11-13"],                    # 业务日期范围
-        "company_id": 66666,                                       # 公司ID
-        "date_range": "DAY",                                       # 日期范围类型：DAY/WEEK/MONTH
-        "item_category_ids": [6666600000591, 6666600001229, 6666600001113, 6666600000859, 6666600001114, 6666600001116],  # 商品分类ID（冷藏乳饮相关分类）
-        "operator_store_id": 6666600004441,                        # 操作员门店ID
-        "query_count": True,                                       # 是否查询数量
-        "query_no_tax": False,                                     # 是否查询不含税金额
-        "query_year_compare": False,                               # 是否查询同比
-        "sale_mode": "DIRECT",                                     # 销售模式：DIRECT直营
-        "store_ids": [6868800000595],                             # 目标门店ID列表
-        "summary_types": ["STORE", "CATEGORY_LV1", "CATEGORY_LV2", "CATEGORY_LV3", "ITEM"]  # 汇总维度
+        "company_id": 66666,
+        "date_range": "DAY",
+        "item_category_ids": [
+            6666600000591,
+            6666600001229,
+            6666600001113,
+            6666600000859,
+            6666600001114,
+            6666600001116,
+            6666600001117,
+            6666600001418,
+            6666600001421,
+            6666600001422,
+            6666600000592,
+            6666600000862,
+            6666600001230,
+            6666600001231,
+        ],
+        "operator_store_id": 6666600004441,
+        "query_count": True,
+        "query_no_tax": False,
+        "query_year_compare": False,
+        "sale_mode": "DIRECT",
+        "summary_types": ["STORE", "CATEGORY_LV1", "CATEGORY_LV2", "CATEGORY_LV3", "ITEM"]
     }
 }
 
+
 def get_sales_analysis_params(template_name="dairy_cold_drinks"):
     """
-    获取销售分析参数模板
+    获取销售分析参数（动态生成日期和门店ID）
     
     Args:
         template_name: 模板名称，可选值: dairy_cold_drinks
         
     Returns:
-        参数字典
+        参数字典（包含动态日期和门店ID）
     """
-    if template_name not in SALES_ANALYSIS_TEMPLATES:
+    if template_name not in _SALES_ANALYSIS_TEMPLATES:
         logger.warning(f"未找到模板 {template_name}，使用默认模板 dairy_cold_drinks")
         template_name = "dairy_cold_drinks"
     
-    return SALES_ANALYSIS_TEMPLATES[template_name].copy()
+    # 获取静态模板参数
+    params = _SALES_ANALYSIS_TEMPLATES[template_name].copy()
+    
+    # 动态注入昨天日期
+    yesterday = get_yesterday_date()
+    params["bizday"] = [yesterday, yesterday]
+    logger.info(f"销售分析日期: {yesterday}")
+    
+    # 动态注入门店ID列表
+    store_ids = get_store_ids_from_file()
+    params["store_ids"] = store_ids
+    logger.info(f"销售分析门店数: {len(store_ids)}")
+    
+    return params
+
+
+# ==================== 配送分析模块 - 参数模板 ====================
+
+_DELIVERY_ANALYSIS_TEMPLATES = {
+    "order_delivery": {
+        "Data_Compact_RangeType_compactDatePicker": "day",
+        "time_type": "audit_date",
+        "audit_date": ["2025-11-14", "2025-11-14"],
+        "company_id": 66666,
+        "operator_store_id": 6666600004441,
+        "out_store_ids": [6868800000674, 6666600013197],
+        "category_level": 1,
+        "storehouse_id": None,
+        "summary_types": ["CATEGORY", "OUT_STORE", "DATE"],
+        "unit_type": "PURCHASE",
+    }
+}
+
+
+def get_delivery_analysis_params(template_name: str = "order_delivery") -> dict:
+    """获取配送分析参数（动态注入日期等信息）"""
+    if template_name not in _DELIVERY_ANALYSIS_TEMPLATES:
+        logger.warning(f"未找到配送分析模板 {template_name}，使用默认模板 order_delivery")
+        template_name = "order_delivery"
+
+    params = _DELIVERY_ANALYSIS_TEMPLATES[template_name].copy()
+
+    # 动态注入昨天日期
+    yesterday = get_yesterday_date()
+    params["audit_date"] = [yesterday, yesterday]
+    logger.info(f"配送分析日期: {yesterday}")
+
+    return params

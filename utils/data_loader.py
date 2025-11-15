@@ -23,8 +23,13 @@ class DataLoader:
         # 英文模块名到中文文件名的映射
         self.module_name_mapping = {
             "inventory_query": "库存查询",
-            "store_product_attr": "门店商品属性", 
-            "org_product_info": "组织商品档案"
+            "store_product_attr": "门店商品属性",
+            "store_product_attributes": "门店商品属性",
+            "org_product_info": "组织商品档案",
+            "product_archive": "组织商品档案",
+            "sales_analysis": "商品销售数据",
+            "delivery_analysis": "配送分析",
+            "订单配送": "订单配送",
         }
     
     def load_latest_module_data(self, module_name: str) -> Optional[pd.DataFrame]:

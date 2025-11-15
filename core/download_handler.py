@@ -77,7 +77,12 @@ class DownloadHandler:
                 save_path.unlink()
             return None
     
-    def download_from_export(self, download_url: str, module_name: str) -> Optional[Path]:
+    def download_from_export(
+        self,
+        download_url: str,
+        module_name: str,
+        file_name_prefix: Optional[str] = None,
+    ) -> Optional[Path]:
         """
         从导出任务获取的URL下载文件
         
@@ -93,24 +98,28 @@ class DownloadHandler:
         # 确保下载目录存在
         ensure_dir_exists(DOWNLOADS_DIR)
         
+        filename_base = file_name_prefix or module_name
+
         # 检查并清理历史文件（如果启用自动清理）
         if AUTO_CLEANUP_FILES:
-            existing_files = get_module_files(DOWNLOADS_DIR, module_name)
+            existing_files = get_module_files(DOWNLOADS_DIR, filename_base)
             if existing_files:
                 logger.info(f"发现 {len(existing_files)} 个历史文件")
-                print(f"[发现] {len(existing_files)} 个 {module_name} 历史文件:")
+                print(f"[发现] {len(existing_files)} 个 {filename_base} 历史文件:")
             for i, file_path in enumerate(existing_files, 1):
                 file_size = file_path.stat().st_size / 1024
                 print(f"   {i}. {file_path.name} ({file_size:.2f} KB)")
             
             # 清理历史文件
-            deleted_count = cleanup_module_files(DOWNLOADS_DIR, module_name, keep_latest=KEEP_LATEST_FILES)
+            deleted_count = cleanup_module_files(
+                DOWNLOADS_DIR, filename_base, keep_latest=KEEP_LATEST_FILES
+            )
             if deleted_count > 0:
                 print(f"[清理] 已清理 {deleted_count} 个历史文件，保留最新 {KEEP_LATEST_FILES} 个")
         
         # 下载新文件
-        result = self.download_file(download_url, module_name)
-        
+        result = self.download_file(download_url, filename_base)
+
         if result:
             file_size_kb = result.stat().st_size / 1024
             print(f"[完成] 新文件下载完成: {result.name} ({file_size_kb:.2f} KB)")

@@ -8,81 +8,87 @@ import json
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, Any, Optional
+from core.base_module import ExportBasedModule
 from utils.logger import get_logger
 from config.api_config import EXPORT_ENDPOINTS
 from config.params_config import get_sales_analysis_params
-from config.headers_config import HEADERS
-from core.export_handler import ExportHandler
-from core.download_handler import DownloadHandler
 
 logger = get_logger(__name__)
 
 
-class SalesAnalysisModule:
-    """商品销售分析类"""
+TEMPLATE_FILE_LABELS = {
+    "dairy_cold_drinks": "冷藏乳饮",
+}
+
+
+class SalesAnalysisModule(ExportBasedModule):
+    """商品销售分析数据采集模块（支持灵活参数配置）"""
     
     def __init__(self):
+        super().__init__()
         self.export_url = EXPORT_ENDPOINTS["sales_analysis"]
-        self.export_handler = ExportHandler()
-        self.download_handler = DownloadHandler()
+        self.module_display_name = "商品销售分析"
         
     
-    def run_full_process(self, template_name: str = "dairy_cold_drinks", custom_params: Optional[Dict[str, Any]] = None) -> Optional[Path]:
+    def get_export_config(self, **kwargs) -> Dict[str, Any]:
         """
-        执行完整的导出和下载流程
+        获取导出配置（支持灵活参数配置）
+        
+        参数优先级：
+        1. custom_params（完全自定义参数，最高优先级）
+        2. 模板参数 + 覆盖参数
+        3. 默认模板参数
         
         Args:
-            template_name: 参数模板名称
-            custom_params: 自定义参数
+            template_name: 参数模板名称（默认: dairy_cold_drinks）
+            custom_params: 自定义参数，会覆盖模板参数
+            **kwargs: 其他参数（如 bizday, store_ids 等）会覆盖模板对应字段
             
         Returns:
-            下载的文件路径，失败返回None
+            Dict: 导出配置
         """
-        logger.info(f"开始执行销售分析完整流程，模板: {template_name}")
+        # 1. 获取模板名称
+        template_name = kwargs.pop('template_name', 'dairy_cold_drinks')
+        custom_params = kwargs.pop('custom_params', None)
         
-        try:
-            # 获取模板参数
-            params = get_sales_analysis_params(template_name)
-            
-            # 合并自定义参数
-            if custom_params:
-                params.update(custom_params)
-            
+        # 2. 如果提供了 custom_params，直接使用（完全自定义）
+        if custom_params:
+            logger.info("使用完全自定义参数")
+            export_params = custom_params
+        else:
+            # 3. 从模板获取基础参数
             logger.info(f"使用参数模板: {template_name}")
-            logger.info(f"请求URL: {self.export_url}")
+            export_params = get_sales_analysis_params(template_name)
             
-            # 直接使用导出处理器执行完整流程（导出+下载）
-            # 使用中文名称匹配ERP系统中的任务名称
-            download_url = self.export_handler.export_and_get_url(
-                export_url=self.export_url,
-                export_params=params,
-                module_name="商品销售分析"
-            )
-            
-            if not download_url:
-                logger.error("导出任务失败，未获取到下载URL")
-                return None
-            
-            logger.info(f"导出任务成功，下载URL: {download_url}")
-            
-            # 使用获得的URL下载文件
-            file_path = self.download_handler.download_from_export(download_url, "商品销售数据")
-            
-            if file_path:
-                logger.info(f"销售分析完整流程执行成功: {file_path}")
-            else:
-                logger.error("文件下载失败")
-            
-            return file_path
-            
-        except Exception as e:
-            logger.error(f"销售分析完整流程执行异常: {str(e)}")
-            return None
+            # 4. 用 kwargs 中的参数覆盖模板参数
+            if kwargs:
+                logger.info(f"参数覆盖: {list(kwargs.keys())}")
+                export_params.update(kwargs)
+        
+        # 5. 生成文件名前缀，便于加工阶段识别
+        file_label = TEMPLATE_FILE_LABELS.get(template_name)
+        if not file_label and custom_params:
+            file_label = custom_params.get("file_label")
+        if not file_label and kwargs.get("file_label"):
+            file_label = kwargs["file_label"]
+        file_name_prefix = "商品销售数据"
+        if file_label:
+            file_name_prefix = f"{file_name_prefix}_{file_label}"
+
+        logger.info(f"最终导出参数: {list(export_params.keys())}")
+        logger.info(f"文件名前缀: {file_name_prefix}")
+
+        return {
+            'export_url': self.export_url,
+            'export_params': export_params,
+            'module_name': self.module_display_name,
+            'file_name_prefix': file_name_prefix,
+        }
 
 
 def run(template_name: str = "dairy_cold_drinks") -> Optional[Path]:
     """
-    模块入口函数（供main.py调用）
+    模块入口函数（供main.py调用）- 已弃用，建议直接使用类方法
     
     Args:
         template_name: 参数模板名称
@@ -94,7 +100,7 @@ def run(template_name: str = "dairy_cold_drinks") -> Optional[Path]:
     
     try:
         module = SalesAnalysisModule()
-        result = module.run_full_process(template_name)
+        result = module.execute(template_name=template_name)
         
         if result:
             logger.info(f"销售分析模块执行成功: {result}")

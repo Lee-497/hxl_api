@@ -23,6 +23,9 @@ EXPORT_ENDPOINTS = {
     
     # 商品销售分析导出接口
     "sales_analysis": f"{BI_BASE_URL}/bi/hxl.bi.pos.itemanalyse.export",
+
+    # 配送分析（占位）导出接口
+    "delivery_analysis": f"{ERP_BASE_URL}/erp/hxl.erp.deliveryreport.deliveryanalyze.export",
 }
 
 # 通用下载接口（用于获取导出任务历史和下载文件）

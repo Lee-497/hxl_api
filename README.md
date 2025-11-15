@@ -51,7 +51,7 @@ xlb_api/
 - openpyxl >= 3.0.0
 - 其他依赖见 requirements.txt
 
-## 安装和使用
+## 快速开始
 
 ### 1. 克隆项目
 ```bash
@@ -64,12 +64,27 @@ cd hxl_api
 pip install -r requirements.txt
 ```
 
-### 3. 准备数据文件
-将以下文件放入 `storage/downloads/` 目录：
-- `库存查询_*.xlsx` - 库存数据
-- `组织商品档案_*.xlsx` - 商品分类数据
-- `门店商品属性_*.xlsx` - 门店商品属性数据
-- `商品人员架构.xlsx` - 采购责任人数据（放在 `storage/reference/` 目录）
+### 3. 配置模块（main.py）
+
+**最简单的配置**（销售分析）：
+```python
+# 启用销售分析模块
+MODULE_SWITCHES = {
+    "sales_analysis": True,
+}
+
+# 配置参数（使用预定义模板）
+MODULE_PARAMS = {
+    "sales_analysis": {
+        "template_name": "dairy_cold_drinks",  # 冷藏乳饮
+    }
+}
+
+# 启用报表加工
+PROCESSING_SWITCHES = {
+    "sales_analysis_report": True,
+}
+```
 
 ### 4. 运行程序
 ```bash
@@ -77,7 +92,10 @@ python main.py
 ```
 
 ### 5. 查看结果
-生成的报表文件位于 `storage/processed/` 目录，文件名格式：`库存汇总报表_YYYYMMDD_HHMMSS.xlsx`
+- **原始数据**: `storage/downloads/商品销售数据_*.xlsx`
+- **分析报表**: `storage/processed/销售分析报表_*.xlsx`
+
+📖 **更多配置示例**: 查看 `QUICK_START.md`
 
 ## 配置说明
 
@@ -110,10 +128,19 @@ EXCLUDED_CATEGORIES = ['冷藏食品', '冷冻食品']
 - 项目类型：企业内部数据处理工具
 - 更新时间：2025年11月
 
+## 📚 文档导航
+
+- 📖 **快速开始**: `QUICK_START.md` - 常用配置场景和示例
+- 🏗️ **架构设计**: `ARCHITECTURE.md` - 系统架构和设计原理
+- ⚙️ **配置指南**: `CONFIG_GUIDE.md` - 详细的配置说明
+- 📝 **优化总结**: `REFACTORING_SUMMARY.md` - 架构优化说明
+
 ## 版本历史
-- v1.0.0 - 基础库存汇总功能
-- v1.1.0 - 添加门店属性关联和空值修复
-- v1.2.0 - 添加分类过滤和数据一致性保证
+- **v2.1.0** (2025-11-15) - 配置设计优化，职责分离
+- **v2.0.0** (2025-11-15) - 模块化架构重构，统一接口
+- **v1.2.0** - 添加分类过滤和数据一致性保证
+- **v1.1.0** - 添加门店属性关联和空值修复
+- **v1.0.0** - 基础库存汇总功能
 
 ## 许可证
 本项目为企业内部使用工具，请遵守相关使用规范。

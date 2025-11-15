@@ -4,6 +4,8 @@
 """
 
 import pandas as pd
+from openpyxl import load_workbook
+from openpyxl.styles import Border, Font, Side
 from pathlib import Path
 from typing import Optional
 from config.settings import PROCESSED_DIR
@@ -94,6 +96,7 @@ def run() -> Optional[Path]:
                 final_df[col] = final_df[col].fillna('').astype(str).replace('nan', '')
         
         final_df.to_excel(output_path, index=False, engine='openpyxl')
+        apply_inventory_report_style(output_path)
         
         logger.info(f"库存汇总报表生成完成: {output_path}")
         print(f"[完成] 库存汇总报表: {output_filename}")
@@ -103,6 +106,25 @@ def run() -> Optional[Path]:
     except Exception as e:
         logger.error(f"生成库存汇总报表时发生异常: {str(e)}")
         return None
+
+
+def apply_inventory_report_style(file_path: Path) -> None:
+    try:
+        workbook = load_workbook(file_path)
+        thin_side = Side(style="thin", color="000000")
+        border = Border(left=thin_side, right=thin_side, top=thin_side, bottom=thin_side)
+        font = Font(name="微软雅黑", size=10)
+
+        for sheet in workbook.worksheets:
+            for row in sheet.iter_rows():
+                for cell in row:
+                    cell.font = font
+                    cell.border = border
+
+        workbook.save(file_path)
+        workbook.close()
+    except Exception as exc:
+        logger.warning(f"应用库存报表样式失败: {exc}")
 
 
 def filter_excluded_warehouses(inventory_df: pd.DataFrame) -> pd.DataFrame:
@@ -212,20 +234,6 @@ def load_product_categories(data_loader) -> Optional[pd.DataFrame]:
     try:
         # 尝试从组织商品档案加载分类数据
         category_df = data_loader.load_latest_module_data("product_archive")
-        
-        if category_df is None or category_df.empty:
-            logger.warning("组织商品档案模块数据为空，尝试直接加载文件")
-            # 使用相对路径查找组织商品档案文件
-            from pathlib import Path
-            base_dir = Path(__file__).parent.parent
-            category_file = base_dir / "storage" / "downloads" / "组织商品档案_20251113_155048.xlsx"
-            
-            if category_file.exists():
-                category_df = pd.read_excel(category_file)
-                logger.info(f"成功从文件加载组织商品档案: {category_file}")
-            else:
-                logger.error(f"组织商品档案文件不存在: {category_file}")
-                return None
         
         if category_df is None or category_df.empty:
             logger.error("无法加载商品分类数据")
@@ -401,20 +409,6 @@ def load_store_product_attributes(data_loader) -> Optional[pd.DataFrame]:
     try:
         # 尝试从模块加载门店商品属性数据
         attr_df = data_loader.load_latest_module_data("store_product_attributes")
-        
-        if attr_df is None or attr_df.empty:
-            logger.warning("门店商品属性模块数据为空，尝试直接加载文件")
-            # 使用相对路径查找门店商品属性文件
-            from pathlib import Path
-            base_dir = Path(__file__).parent.parent
-            attr_file = base_dir / "storage" / "downloads" / "门店商品属性_20251113_154822.xlsx"
-            
-            if attr_file.exists():
-                attr_df = pd.read_excel(attr_file)
-                logger.info(f"成功从文件加载门店商品属性: {attr_file}")
-            else:
-                logger.error(f"门店商品属性文件不存在: {attr_file}")
-                return None
         
         if attr_df is None or attr_df.empty:
             logger.error("无法加载门店商品属性数据")
