@@ -4,6 +4,7 @@
 from pathlib import Path
 from typing import Optional
 
+import numpy as np
 import pandas as pd
 from openpyxl import load_workbook
 from openpyxl.styles import Border, Font, Side
@@ -101,8 +102,8 @@ def run() -> Optional[Path]:
             columns={
                 store_col: "门店",
                 category_col: "一级分类",
-                quantity_col: "可用数量",
-                amount_col: "可用金额",
+                quantity_col: "库存数量",
+                amount_col: "库存金额",
             }
         )
 
@@ -113,8 +114,8 @@ def run() -> Optional[Path]:
             logger.warning("过滤后无有效的门店分类数据")
             return None
 
-        summary_df["可用数量"] = summary_df["可用数量"].fillna(0)
-        summary_df["可用金额"] = summary_df["可用金额"].fillna(0)
+        summary_df["库存数量"] = summary_df["库存数量"].fillna(0).astype(float)
+        summary_df["库存金额"] = summary_df["库存金额"].fillna(0).astype(float)
 
         # 加工配送分析汇总并合入明细
         delivery_summary = build_delivery_summary(data_loader, data_parser)
@@ -129,8 +130,19 @@ def run() -> Optional[Path]:
             summary_df["配送数量"] = 0
             summary_df["配送金额"] = 0
 
-        summary_df["配送数量"] = summary_df.get("配送数量", 0).fillna(0)
-        summary_df["配送金额"] = summary_df.get("配送金额", 0).fillna(0)
+        summary_df["配送数量"] = summary_df.get("配送数量", 0).fillna(0).astype(float)
+        summary_df["配送金额"] = summary_df.get("配送金额", 0).fillna(0).astype(float)
+
+        summary_df["库存金额周转"] = np.where(
+            summary_df["配送金额"] == 0,
+            0,
+            summary_df["库存金额"] / summary_df["配送金额"],
+        )
+        summary_df["库存数量周转"] = np.where(
+            summary_df["配送数量"] == 0,
+            0,
+            summary_df["库存数量"] / summary_df["配送数量"],
+        )
 
         # 构建分类和门店排序
         category_order_map = {
@@ -143,7 +155,7 @@ def run() -> Optional[Path]:
         # 追加门店合计
         store_totals = (
             summary_df.groupby("门店")[
-                ["可用数量", "可用金额", "配送数量", "配送金额"]
+                ["库存数量", "库存金额", "配送数量", "配送金额"]
             ]
             .sum(min_count=1)
             .reset_index()
@@ -152,12 +164,22 @@ def run() -> Optional[Path]:
         store_totals["store_order"] = store_totals["门店"].map(store_order_map)
         store_totals["segment_order"] = 1
         store_totals["category_order"] = len(category_order_map)
+        store_totals["库存金额周转"] = np.where(
+            store_totals["配送金额"] == 0,
+            0,
+            store_totals["库存金额"] / store_totals["配送金额"],
+        )
+        store_totals["库存数量周转"] = np.where(
+            store_totals["配送数量"] == 0,
+            0,
+            store_totals["库存数量"] / store_totals["配送数量"],
+        )
 
         # 总合计（按分类）
         category_totals = (
             summary_df.groupby("一级分类")[[
-                "可用数量",
-                "可用金额",
+                "库存数量",
+                "库存金额",
                 "配送数量",
                 "配送金额",
             ]]
@@ -168,18 +190,38 @@ def run() -> Optional[Path]:
         category_totals["store_order"] = len(store_order_map)
         category_totals["segment_order"] = 0
         category_totals["category_order"] = category_totals["一级分类"].map(category_order_map)
+        category_totals["库存金额周转"] = np.where(
+            category_totals["配送金额"] == 0,
+            0,
+            category_totals["库存金额"] / category_totals["配送金额"],
+        )
+        category_totals["库存数量周转"] = np.where(
+            category_totals["配送数量"] == 0,
+            0,
+            category_totals["库存数量"] / category_totals["配送数量"],
+        )
 
         grand_total = pd.DataFrame({
             "门店": ["总合计"],
             "一级分类": ["合计"],
-            "可用数量": [category_totals["可用数量"].sum()],
-            "可用金额": [category_totals["可用金额"].sum()],
+            "库存数量": [category_totals["库存数量"].sum()],
+            "库存金额": [category_totals["库存金额"].sum()],
             "配送数量": [category_totals["配送数量"].sum()],
             "配送金额": [category_totals["配送金额"].sum()],
             "store_order": [len(store_order_map)],
             "segment_order": [1],
             "category_order": [len(category_order_map)],
         })
+        grand_total["库存金额周转"] = np.where(
+            grand_total["配送金额"] == 0,
+            0,
+            grand_total["库存金额"] / grand_total["配送金额"],
+        )
+        grand_total["库存数量周转"] = np.where(
+            grand_total["配送数量"] == 0,
+            0,
+            grand_total["库存数量"] / grand_total["配送数量"],
+        )
 
         # 门店详细行
         detail_df = summary_df.copy()
@@ -200,15 +242,33 @@ def run() -> Optional[Path]:
         pivot_df = combined_df[[
             "门店",
             "一级分类",
-            "可用数量",
-            "可用金额",
-            "配送数量",
             "配送金额",
+            "配送数量",
+            "库存金额",
+            "库存数量",
+            "库存金额周转",
+            "库存数量周转",
         ]]
 
-        output_filename = generate_timestamped_filename("库存门店分类透视", "xlsx")
-        output_path = PROCESSED_DIR / output_filename
+        numeric_columns = [
+            "配送金额",
+            "配送数量",
+            "库存金额",
+            "库存数量",
+            "库存金额周转",
+            "库存数量周转",
+        ]
+        pivot_df[numeric_columns] = pivot_df[numeric_columns].apply(lambda col: col.round(1))
+
+        report_date = pd.Timestamp.now().strftime("%Y-%m-%d")
+        base_filename = f"订单库存{report_date}.xlsx"
+        output_path = PROCESSED_DIR / base_filename
         output_path.parent.mkdir(parents=True, exist_ok=True)
+
+        suffix = 1
+        while output_path.exists():
+            output_path = PROCESSED_DIR / f"订单库存{report_date}_{suffix}.xlsx"
+            suffix += 1
 
         pivot_df.to_excel(output_path, index=False)
 
@@ -217,7 +277,7 @@ def run() -> Optional[Path]:
         logger.info(f"库存门店分类透视报表生成成功: {output_path}")
         if delivery_summary is not None and not delivery_summary.empty:
             logger.info("配送分析分类汇总已合并并参与合计计算")
-        print(f"[完成] 库存门店分类透视报表: {output_filename}")
+        print(f"[完成] 库存门店分类透视报表: {output_path.name}")
         return output_path
 
     except Exception as exc:

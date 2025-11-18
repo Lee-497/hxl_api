@@ -33,9 +33,9 @@ PROCESSING_SWITCHES = {
     # 库存汇总报表
     "inventory_summary_report": False,
     # 冷藏乳饮报表
-    "sales_analysis_report": False,  # ✅ 启用销售分析报表
+    "sales_analysis_report": True,  # ✅ 启用销售分析报表
     # 订单配送分析报表
-    "inventory_store_category_report": True,
+    "inventory_store_category_report": False,
 }
 
 

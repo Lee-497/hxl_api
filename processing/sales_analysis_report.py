@@ -1,5 +1,6 @@
 """冷藏乳饮销售分析报表加工"""
 
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Optional, List
 
@@ -10,7 +11,6 @@ from openpyxl.styles import Font, Border, Side
 from config.settings import PROCESSED_DIR
 from utils.data_loader import get_data_loader
 from utils.logger import get_logger
-from utils.file_utils import generate_timestamped_filename
 
 logger = get_logger(__name__)
 
@@ -62,11 +62,18 @@ def run() -> Optional[Path]:
         logger.info(f"处理后数据量: {len(processed_df)} 行")
 
         # 3. 保存处理后的报表
-        output_filename = generate_timestamped_filename("冷藏乳饮销售分析报表", "xlsx")
-        output_path = PROCESSED_DIR / output_filename
-        
+        report_date = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
+        base_filename = f"冷藏乳饮{report_date}.xlsx"
+        output_path = PROCESSED_DIR / base_filename
+
         # 确保目录存在
         output_path.parent.mkdir(parents=True, exist_ok=True)
+
+        # 避免同日重复生成时覆盖
+        suffix = 1
+        while output_path.exists():
+            output_path = PROCESSED_DIR / f"冷藏乳饮{report_date}_{suffix}.xlsx"
+            suffix += 1
         
         processed_df.to_excel(output_path, sheet_name='冷藏乳饮销售明细', index=False)
 

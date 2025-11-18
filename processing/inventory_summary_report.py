@@ -3,16 +3,18 @@
 导入库存数据并剔除指定仓库的数据
 """
 
+from datetime import datetime
+from pathlib import Path
+from typing import Optional
+
 import pandas as pd
 from openpyxl import load_workbook
 from openpyxl.styles import Border, Font, Side
-from pathlib import Path
-from typing import Optional
+
 from config.settings import PROCESSED_DIR
 from utils.data_loader import get_data_loader
 from utils.data_parser import get_data_parser
 from utils.logger import get_logger
-from utils.file_utils import generate_timestamped_filename
 
 logger = get_logger(__name__)
 
@@ -79,8 +81,15 @@ def run() -> Optional[Path]:
         logger.info(f"透视转换后数据: {len(pivoted_df)} 行, {len(pivoted_df.columns)} 列")
         
         # 6. 保存处理后的报表
-        output_filename = generate_timestamped_filename("库存汇总报表", "xlsx")
-        output_path = PROCESSED_DIR / output_filename
+        report_date = datetime.now().strftime("%Y-%m-%d")
+        base_filename = f"采购库存{report_date}.xlsx"
+        output_path = PROCESSED_DIR / base_filename
+
+        # 避免同日重复生成时覆盖
+        suffix = 1
+        while output_path.exists():
+            output_path = PROCESSED_DIR / f"采购库存{report_date}_{suffix}.xlsx"
+            suffix += 1
         
         # 在保存前最后一次处理空值，确保Excel中显示为空白而不是NaN
         final_df = pivoted_df.copy()
@@ -99,7 +108,7 @@ def run() -> Optional[Path]:
         apply_inventory_report_style(output_path)
         
         logger.info(f"库存汇总报表生成完成: {output_path}")
-        print(f"[完成] 库存汇总报表: {output_filename}")
+        print(f"[完成] 库存汇总报表: {output_path.name}")
         
         return output_path
         
@@ -818,25 +827,31 @@ def pivot_stores_to_columns(inventory_df: pd.DataFrame, attr_df: pd.DataFrame = 
         
         # 重新排列列的顺序，让每个门店的所有字段相邻
         base_columns = ['商品代码', '商品条码', '商品名称'] + available_category_fields + available_staff_fields
-        store_names = list(set([col.split('_')[0] for col in pivoted_df.columns if '_数量' in col or '_可用数量' in col or '_停购' in col or '_停止要货' in col]))
-        store_names.sort()  # 按门店名称排序
+        store_names = list({col.split('_')[0] for col in pivoted_df.columns if '_数量' in col or '_可用数量' in col or '_停购' in col or '_停止要货' in col})
+        preferred_order = ["广东从化仓", "广东东莞二仓"]
+
+        def _store_sort_key(name: str) -> tuple[int, str]:
+            priority = preferred_order.index(name) if name in preferred_order else len(preferred_order)
+            return priority, name
+
+        store_names.sort(key=_store_sort_key)
         
         # 构建新的列顺序
         new_columns = base_columns.copy()
         for store in store_names:
-            qty_col = f'{store}_数量'
-            available_col = f'{store}_可用数量'
             stop_purchase_col = f'{store}_停购'
             stop_order_col = f'{store}_停止要货'
-            
-            if qty_col in pivoted_df.columns:
-                new_columns.append(qty_col)
-            if available_col in pivoted_df.columns:
-                new_columns.append(available_col)
+            qty_col = f'{store}_数量'
+            available_col = f'{store}_可用数量'
+
             if stop_purchase_col in pivoted_df.columns:
                 new_columns.append(stop_purchase_col)
             if stop_order_col in pivoted_df.columns:
                 new_columns.append(stop_order_col)
+            if qty_col in pivoted_df.columns:
+                new_columns.append(qty_col)
+            if available_col in pivoted_df.columns:
+                new_columns.append(available_col)
         
         # 重新排列DataFrame的列
         pivoted_df = pivoted_df[new_columns]
