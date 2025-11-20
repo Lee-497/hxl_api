@@ -22,6 +22,20 @@ def get_yesterday_date():
     yesterday = datetime.now() - timedelta(days=1)
     return yesterday.strftime("%Y-%m-%d")
 
+def get_month_date_range():
+    """
+    获取当前月份1号到昨天的日期范围
+    
+    Returns:
+        List[str]: [月份1号, 昨天], 格式: YYYY-MM-DD
+    """
+    now = datetime.now()
+    # 当前月份1号
+    first_day = now.replace(day=1).strftime("%Y-%m-%d")
+    # 昨天
+    yesterday = (now - timedelta(days=1)).strftime("%Y-%m-%d")
+    return [first_day, yesterday]
+
 def get_current_datetime():
     """获取当前日期时间（YYYY-MM-DD HH:MM:SS格式）"""
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -133,6 +147,30 @@ INVENTORY_QUERY_EXPORT_PARAMS = {
     "supplier_main_body_ids": None
 }
 
+# 库存统计模块 - 仓库配置列表
+INVENTORY_STATISTICS_WAREHOUSES = [
+    {
+        "name": "广东从化仓",
+        "store_id": 6868800000674,
+        "storehouse_id": 6868800000776,
+    },
+    {
+        "name": "广东东莞二仓",
+        "store_id": 6666600013197,
+        "storehouse_id": 6666600012498,
+    },
+]
+
+# 库存统计模块 - 基础导出参数（不包含门店和仓库ID）
+INVENTORY_STATISTICS_BASE_PARAMS = {
+    "company_id": 66666,
+    "operator_store_id": 6666600004441,
+    "page_number": 0,
+    "page_size": 200,
+    "query_unit": "PURCHASE",
+    "unit_type": "PURCHASE"
+}
+
 # 门店管理模块 - 查询参数
 STORE_MANAGEMENT_QUERY_PARAMS = {
     "page_size": 200,
@@ -182,6 +220,33 @@ _SALES_ANALYSIS_TEMPLATES = {
         "query_year_compare": False,
         "sale_mode": "DIRECT",
         "summary_types": ["STORE", "CATEGORY_LV1", "CATEGORY_LV2", "CATEGORY_LV3", "ITEM"]
+    },
+    
+    # 🆕 调改店报表 - 三级分类PSD数据源
+    "store_adjustment_category_lv3": {
+        "company_id": 66666,
+        "date_range": "DAY",
+        "operator_store_id": 6666600004441,
+        "query_count": True,
+        "query_no_tax": False,
+        "query_year_compare": False,
+        "summary_types": ["CATEGORY_LV1", "CATEGORY_LV2", "CATEGORY_LV3"],
+        "item_category_ids": [
+            6666600001269, 6666600001270, 6666600001271, 6666600001272, 6666600001273,
+            6666600001427, 6666600001428, 6666600001042, 6666600001152, 6666600001153,
+            6666600001343, 6666600001394, 6666600001395, 6666600001396, 6666600001255,
+            6666600001149, 6666600001342, 6666600001323, 6666600001324, 6666600001325,
+            6666600001397, 6666600001326, 6666600001327, 6666600001328, 6666600001337,
+            6666600001398, 6666600001330, 6666600001331, 6666600001332, 6666600001333,
+            6666600001399, 6666600001400, 6666600001401, 6666600001402, 6666600001334,
+            6666600001335, 6666600001336, 6666600001403, 6666600001404, 6666600001299,
+            6666600001300, 6666600001303, 6666600001304, 6666600001305, 6666600001306,
+            6666600001307, 6666600001250, 6666600001315, 6666600001316, 6666600001317,
+            6666600001340, 6666600001341, 6666600001376, 6666600001392, 6666600001393,
+            6666600001301, 6666600001308, 6666600001309, 6666600001302, 6666600001310,
+            6666600001311, 6666600001312, 6666600001313, 6666600001314
+        ]
+        # bizday 和 store_ids 将在 get_sales_analysis_params() 中动态注入
     }
 }
 
@@ -191,7 +256,9 @@ def get_sales_analysis_params(template_name="dairy_cold_drinks"):
     获取销售分析参数（动态生成日期和门店ID）
     
     Args:
-        template_name: 模板名称，可选值: dairy_cold_drinks
+        template_name: 模板名称，可选值: 
+            - dairy_cold_drinks: 冷藏乳饮（昨天日期）
+            - store_adjustment_category_lv3: 调改店-三级分类PSD（当月日期范围）
         
     Returns:
         参数字典（包含动态日期和门店ID）
@@ -203,10 +270,17 @@ def get_sales_analysis_params(template_name="dairy_cold_drinks"):
     # 获取静态模板参数
     params = _SALES_ANALYSIS_TEMPLATES[template_name].copy()
     
-    # 动态注入昨天日期
-    yesterday = get_yesterday_date()
-    params["bizday"] = [yesterday, yesterday]
-    logger.info(f"销售分析日期: {yesterday}")
+    # 动态注入日期（根据模板类型）
+    if template_name == "store_adjustment_category_lv3":
+        # 调改店-三级分类PSD：当月日期范围（月份1号 → 昨天）
+        date_range = get_month_date_range()
+        params["bizday"] = date_range
+        logger.info(f"销售分析日期范围: {date_range[0]} → {date_range[1]}")
+    else:
+        # 默认：昨天日期
+        yesterday = get_yesterday_date()
+        params["bizday"] = [yesterday, yesterday]
+        logger.info(f"销售分析日期: {yesterday}")
     
     # 动态注入门店ID列表
     store_ids = get_store_ids_from_file()

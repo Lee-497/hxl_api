@@ -34,6 +34,10 @@ class StoreProductAttrModule(ExportBasedModule):
             'module_name': self.module_display_name
         }
     
+    def execute(self, **kwargs) -> Optional[Path]:
+        """执行导出任务"""
+        return super().execute(**kwargs)
+    
 
 
 def main():

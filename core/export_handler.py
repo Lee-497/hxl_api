@@ -128,7 +128,7 @@ class ExportHandler:
                     })
             
             if not matching_tasks:
-                logger.info("未找到匹配的任务，可能任务尚未开始")
+                logger.info("未找到匹配的任务（过滤掉历史任务后为空），等待后重试")
                 time.sleep(EXPORT_POLL_INTERVAL)
                 continue
             
@@ -243,9 +243,9 @@ class ExportHandler:
                         import datetime
                         create_time = datetime.datetime.strptime(create_time_str, "%Y-%m-%d %H:%M:%S")
                         
-                        # 只考虑开始时间之后创建的任务（允许1分钟误差）
+                        # 只考虑开始时间之后创建的任务（允许5秒误差）
                         time_diff = (create_time - start_time).total_seconds()
-                        if time_diff >= -60:  # 允许1分钟的时间误差
+                        if time_diff >= -5:  # 允许少量时间差，避免匹配到历史任务
                             matching_tasks.append({
                                 "task": task,
                                 "name": task_name,

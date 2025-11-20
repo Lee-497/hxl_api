@@ -6,6 +6,7 @@
 ERP_BASE_URL = "https://erp-web.erp.ali-prod.xlbsoft.com"
 EXPORT_BASE_URL = "https://gdp.xlbsoft.com"
 BI_BASE_URL = "https://bi-web.bi.ali-prod.xlbsoft.com"
+WMS_BASE_URL = "https://wms-export.wms.ali-prod.xlbsoft.com"
 
 # 导出接口地址（各模块的导出接口）
 EXPORT_ENDPOINTS = {
@@ -26,7 +27,11 @@ EXPORT_ENDPOINTS = {
 
     # 配送分析（占位）导出接口
     "delivery_analysis": f"{ERP_BASE_URL}/erp/hxl.erp.deliveryreport.deliveryanalyze.export",
+    
+    # 库存统计导出接口
+    "inventory_statistics": f"{WMS_BASE_URL}/wms/hxl.wms.stock.detail.export",
 }
+
 
 # 通用下载接口（用于获取导出任务历史和下载文件）
 DOWNLOAD_ENDPOINT = f"{EXPORT_BASE_URL}/export/hxl.export.reporthistory.page"

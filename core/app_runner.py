@@ -6,6 +6,7 @@ from typing import Dict, Any, Optional
 from modules.store_product_attr import StoreProductAttrModule
 from modules.org_product_info import OrgProductInfoModule
 from modules.inventory_query import InventoryQueryModule
+from modules.inventory_statistics import InventoryStatisticsModule
 from modules.store_management import StoreManagementModule
 from modules.sales_analysis import SalesAnalysisModule
 from modules.delivery_analysis import DeliveryAnalysisModule
@@ -21,6 +22,7 @@ class AppRunner:
     MODULE_CLASSES = {
         "store_product_attr": StoreProductAttrModule,
         "inventory_query": InventoryQueryModule,
+        "inventory_statistics": InventoryStatisticsModule,
         "org_product_info": OrgProductInfoModule,
         "store_management": StoreManagementModule,
         "sales_analysis": SalesAnalysisModule,
@@ -31,6 +33,7 @@ class AppRunner:
     MODULE_DISPLAY_NAMES = {
         "store_product_attr": "门店商品属性",
         "inventory_query": "库存查询",
+        "inventory_statistics": "库存库位明细",  # 修改为与导出记录匹配
         "org_product_info": "组织商品档案",
         "store_management": "门店管理",
         "sales_analysis": "商品销售分析",
@@ -144,6 +147,37 @@ class AppRunner:
             # 向后兼容：处理旧格式配置
             # 旧格式: "sales_analysis": "dairy_cold_drinks" 或 {"template_name": ...}
             # 新格式: "sales_analysis": True/False
+            # 🆕 多报表格式: "sales_analysis": {"dairy_cold_drinks": True, "store_adjustment_category_lv3": False}
+            
+            # 处理多报表开关（字典格式，但不包含 template_name 键）
+            if isinstance(module_switch, dict) and "template_name" not in module_switch:
+                # 多报表模式：{"template1": True, "template2": False}
+                for template_name, is_enabled in module_switch.items():
+                    if not is_enabled:
+                        continue
+                    
+                    # 获取显示名称
+                    display_name = self.MODULE_DISPLAY_NAMES.get(module_key, module_key)
+                    
+                    # 获取模板参数
+                    template_config = {"template_name": template_name}
+                    
+                    # 打印执行信息
+                    total_modules += 1
+                    print(f">> 执行{display_name}模块（模板: {template_name}）...")
+                    
+                    # 执行模块
+                    if self.run_module(module_key, template_config):
+                        success_modules += 1
+                        print(f"[成功] {display_name} - {template_name}模块完成")
+                    else:
+                        failed_modules.append(f"{display_name} - {template_name}")
+                        print(f"[失败] {display_name} - {template_name}模块失败")
+                    print()
+                
+                continue  # 跳过后续处理
+            
+            # 处理单报表模式
             if isinstance(module_switch, str) or (isinstance(module_switch, dict) and "template_name" in module_switch):
                 # 旧格式：直接作为参数配置
                 logger.warning(f"模块 {module_key} 使用旧配置格式，建议使用新格式（MODULE_SWITCHES + MODULE_PARAMS）")

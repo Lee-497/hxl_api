@@ -2,6 +2,7 @@
 组织商品档案模块
 """
 
+from pathlib import Path
 from typing import Dict, Any
 
 from core.base_module import ExportBasedModule
@@ -30,3 +31,6 @@ class OrgProductInfoModule(ExportBasedModule):
             "export_params": ORG_PRODUCT_INFO_EXPORT_PARAMS,
             "module_name": self.module_display_name,
         }
+
+    def execute(self, **kwargs) -> Path | None:
+        return super().execute(**kwargs)

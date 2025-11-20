@@ -18,6 +18,7 @@ logger = get_logger(__name__)
 
 TEMPLATE_FILE_LABELS = {
     "dairy_cold_drinks": "冷藏乳饮",
+    "store_adjustment_category_lv3": "调改店-三级分类PSD",  # 🆕 新增
 }
 
 

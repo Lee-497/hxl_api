@@ -9,33 +9,37 @@ from core.report_manager import get_report_manager
 MODULE_SWITCHES = {
     "store_product_attr": False,    # 门店商品属性
     "inventory_query": False,       # 库存查询
+    "inventory_statistics": False,  # 库存统计
     "org_product_info": False,      # 组织商品档案
     "store_management": False,      # 门店管理
-    "sales_analysis": False,        # 商品销售分析
+    
+    # 🆕 商品销售分析 - 多报表开关
+    "sales_analysis": {
+        "dairy_cold_drinks": False,              # 冷藏乳饮报表
+        "store_adjustment_category_lv3": True, # 调改店-三级分类PSD
+    },
+    
     "delivery_analysis": False,     # 配送分析
 }
 
 # ==================== 模块参数 ====================
+# 注意：sales_analysis 已改为字典开关，不需要在 MODULE_PARAMS 中配置
 MODULE_PARAMS = {
-    "sales_analysis": {
-        # 使用预定义模板
-        "template_name": "dairy_cold_drinks",
-    },
     "delivery_analysis": {
         "template_name": "order_delivery",
     },
 }
 
 # ==================== 加工报表 ====================
-ENABLE_PROCESSING = True
+ENABLE_PROCESSING = False
 
 PROCESSING_SWITCHES = {
     # 库存汇总报表
-    "inventory_summary_report": False,
+    "inventory_summary_report": True,
     # 冷藏乳饮报表
     "sales_analysis_report": True,  # ✅ 启用销售分析报表
     # 订单配送分析报表
-    "inventory_store_category_report": False,
+    "inventory_store_category_report": True,
 }
 
 
