@@ -18,7 +18,11 @@ logger = get_logger(__name__)
 
 TEMPLATE_FILE_LABELS = {
     "dairy_cold_drinks": "冷藏乳饮",
-    "store_adjustment_category_lv3": "调改店-三级分类PSD",  # 🆕 新增
+    "store_adjustment_category_lv3": "调改店-三级分类PSD",
+    "store_adjustment_planning_sku": "调改店-规划SKU",
+    "store_adjustment_all_sku": "调改店-全店SKU",
+    "store_adjustment_grain_oil_nonfood": "调改店-粮油非食",
+    "store_adjustment_frozen": "调改店-冷冻",
 }
 
 
@@ -43,7 +47,10 @@ class SalesAnalysisModule(ExportBasedModule):
         Args:
             template_name: 参数模板名称（默认: dairy_cold_drinks）
             custom_params: 自定义参数，会覆盖模板参数
-            **kwargs: 其他参数（如 bizday, store_ids 等）会覆盖模板对应字段
+            bizday: 自定义日期范围 ["YYYY-MM-DD", "YYYY-MM-DD"]
+            store_adjustment_planning_sku_bizday: 门店规划SKU自定义日期范围
+            store_adjustment_other_bizday: 三级分类和全店SKU自定义日期范围
+            **kwargs: 其他参数（如 store_ids 等）会覆盖模板对应字段
             
         Returns:
             Dict: 导出配置
@@ -51,15 +58,23 @@ class SalesAnalysisModule(ExportBasedModule):
         # 1. 获取模板名称
         template_name = kwargs.pop('template_name', 'dairy_cold_drinks')
         custom_params = kwargs.pop('custom_params', None)
+        bizday = kwargs.pop('bizday', None)  # 提取 bizday 参数
+        store_adjustment_planning_sku_bizday = kwargs.pop('store_adjustment_planning_sku_bizday', None)
+        store_adjustment_other_bizday = kwargs.pop('store_adjustment_other_bizday', None)
         
         # 2. 如果提供了 custom_params，直接使用（完全自定义）
         if custom_params:
             logger.info("使用完全自定义参数")
             export_params = custom_params
         else:
-            # 3. 从模板获取基础参数
+            # 3. 从模板获取基础参数（传递日期参数）
             logger.info(f"使用参数模板: {template_name}")
-            export_params = get_sales_analysis_params(template_name)
+            export_params = get_sales_analysis_params(
+                template_name, 
+                bizday=bizday,
+                store_adjustment_planning_sku_bizday=store_adjustment_planning_sku_bizday,
+                store_adjustment_other_bizday=store_adjustment_other_bizday
+            )
             
             # 4. 用 kwargs 中的参数覆盖模板参数
             if kwargs:

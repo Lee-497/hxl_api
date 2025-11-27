@@ -7,19 +7,22 @@ from core.report_manager import get_report_manager
 
 # ==================== 数据采集模块 ====================
 MODULE_SWITCHES = {
-    "store_product_attr": False,    # 门店商品属性
-    "inventory_query": False,       # 库存查询
+    "store_product_attr": True,     # 门店商品属性
+    "inventory_query": True,        # 库存查询
     "inventory_statistics": False,  # 库存统计
-    "org_product_info": False,      # 组织商品档案
-    "store_management": False,      # 门店管理
-    
+    "org_product_info": True,       # 组织商品档案
+    "store_management": True,       # 门店管理
+    "org_item_mapping": False,       # 组织档案映射清单
     # 🆕 商品销售分析 - 多报表开关
     "sales_analysis": {
-        "dairy_cold_drinks": False,              # 冷藏乳饮报表
-        "store_adjustment_category_lv3": True, # 调改店-三级分类PSD
+        "dairy_cold_drinks": True,                     # 冷藏乳饮报表
+        "store_adjustment_category_lv3": False,        # 调改店-三级分类PSD
+        "store_adjustment_planning_sku": False,        # 调改店-规划SKU
+        "store_adjustment_all_sku": False,             # 调改店-全店SKU
+        "store_adjustment_grain_oil_nonfood": False,   # 调改店-粮油非食
+        "store_adjustment_frozen": False,              # 调改店-冷冻
     },
-    
-    "delivery_analysis": False,     # 配送分析
+    "delivery_analysis": True,                  # 配送分析
 }
 
 # ==================== 模块参数 ====================
@@ -28,10 +31,15 @@ MODULE_PARAMS = {
     "delivery_analysis": {
         "template_name": "order_delivery",
     },
+    # 🔧 为 sales_analysis 自定义日期范围（会应用到所有启用的模板）
+    "sales_analysis": {
+        "store_adjustment_planning_sku_bizday": ["2025-10-01", "2025-11-20"],  # 门店规划SKU自定义日期范围
+        "store_adjustment_other_bizday": ["2025-11-01", "2025-11-20"]       # 三级分类和全店SKU自定义日期范围
+    }
 }
 
 # ==================== 加工报表 ====================
-ENABLE_PROCESSING = False
+ENABLE_PROCESSING = True
 
 PROCESSING_SWITCHES = {
     # 库存汇总报表

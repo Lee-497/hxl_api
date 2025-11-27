@@ -24,12 +24,17 @@ EXPORT_ENDPOINTS = {
     
     # 商品销售分析导出接口
     "sales_analysis": f"{BI_BASE_URL}/bi/hxl.bi.pos.itemanalyse.export",
-
     # 配送分析（占位）导出接口
     "delivery_analysis": f"{ERP_BASE_URL}/erp/hxl.erp.deliveryreport.deliveryanalyze.export",
     
     # 库存统计导出接口
     "inventory_statistics": f"{WMS_BASE_URL}/wms/hxl.wms.stock.detail.export",
+}
+
+# API接口地址（直接调用的API接口）
+API_ENDPOINTS = {
+    # 组织档案映射清单API接口
+    "org_item_mapping": f"{EXPORT_BASE_URL}/erp-mdm/hxl.erp.org.item.page",
 }
 
 

@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Dict, Any, Optional, List
 from core.base_module import ApiBasedModule
 from utils.logger import get_logger
-from utils.file_utils import generate_timestamped_filename
+from utils.file_utils import generate_timestamped_filename, cleanup_module_files
 from config.api_config import EXPORT_ENDPOINTS
 from config.params_config import STORE_MANAGEMENT_QUERY_PARAMS
 from config.settings import DOWNLOADS_DIR
@@ -55,6 +55,11 @@ class StoreManagementModule(ApiBasedModule):
             
             # 转换为DataFrame
             df = pd.DataFrame(extracted_data)
+            
+            # 🗑️ 删除旧文件（确保文件夹中每个类型只有一个文件）
+            deleted = cleanup_module_files(DOWNLOADS_DIR, self.module_display_name, keep_latest=0)
+            if deleted > 0:
+                logger.info(f"清理了 {deleted} 个旧的{self.module_display_name}文件")
             
             # 生成文件名
             filename = generate_timestamped_filename(self.module_display_name, "xlsx")

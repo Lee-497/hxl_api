@@ -10,6 +10,7 @@ from modules.inventory_statistics import InventoryStatisticsModule
 from modules.store_management import StoreManagementModule
 from modules.sales_analysis import SalesAnalysisModule
 from modules.delivery_analysis import DeliveryAnalysisModule
+from modules.org_item_mapping import OrgItemMappingModule
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -27,6 +28,7 @@ class AppRunner:
         "store_management": StoreManagementModule,
         "sales_analysis": SalesAnalysisModule,
         "delivery_analysis": DeliveryAnalysisModule,
+        "org_item_mapping": OrgItemMappingModule,
     }
     
     # 模块显示名称映射
@@ -38,6 +40,7 @@ class AppRunner:
         "store_management": "门店管理",
         "sales_analysis": "商品销售分析",
         "delivery_analysis": "配送分析",
+        "org_item_mapping": "组织档案映射清单",
     }
     
     def __init__(self):
@@ -161,6 +164,10 @@ class AppRunner:
                     
                     # 获取模板参数
                     template_config = {"template_name": template_name}
+                    
+                    # 添加 MODULE_PARAMS 中的参数
+                    if module_key in module_params:
+                        template_config.update(module_params[module_key])
                     
                     # 打印执行信息
                     total_modules += 1
