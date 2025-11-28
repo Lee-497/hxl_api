@@ -65,7 +65,11 @@ class ExportHandler:
             return result
             
         except Exception as e:
-            logger.error(f"请求失败: {str(e)}")
+            # 超时错误降级为 WARNING，因为任务可能已在后台启动
+            if "timeout" in str(e).lower():
+                logger.warning(f"请求超时: {str(e)}")
+            else:
+                logger.error(f"请求失败: {str(e)}")
             return None
     
     def wait_for_export_completion(self, module_name: str, 
